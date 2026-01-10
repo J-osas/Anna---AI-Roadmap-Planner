@@ -6,6 +6,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Anna - AI Roadmap Planner</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['Outfit', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
@@ -19,8 +32,8 @@
       margin: 0;
       padding: 0;
       overflow-x: hidden;
-      overscroll-behavior-y: none; /* Prevents pull-to-refresh bounce */
-      touch-action: manipulation;  /* Disables double-tap to zoom */
+      overscroll-behavior-y: none;
+      touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
     body {
@@ -28,6 +41,10 @@
       background: #f8fafc;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      transition: background-color 0.3s ease;
+    }
+    html.dark body {
+      background: #020617;
     }
     h1, h2, h3, .font-heading {
       font-family: 'Outfit', sans-serif;
@@ -36,6 +53,11 @@
       background: rgba(255, 255, 255, 0.7);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+    .dark .glass {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
     .gradient-text {
       background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
