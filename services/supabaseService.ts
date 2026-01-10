@@ -31,9 +31,9 @@ export async function updateProfileName(userId: string, name: string): Promise<v
   if (error) throw error;
 }
 
-export async function savePlan(userId: string, prefs: UserPreferences, plan: RoadmapResponse): Promise<void> {
-  if (!supabase) return;
-  const { error } = await supabase
+export async function savePlan(userId: string, prefs: UserPreferences, plan: RoadmapResponse): Promise<string | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase
     .from('plans')
     .insert({
       user_id: userId,
@@ -41,7 +41,20 @@ export async function savePlan(userId: string, prefs: UserPreferences, plan: Roa
       experience: prefs.experience,
       goal: prefs.goal,
       plan_data: plan
-    });
+    })
+    .select('id')
+    .single();
+  
+  if (error) throw error;
+  return data?.id || null;
+}
+
+export async function deletePlan(planId: string): Promise<void> {
+  if (!supabase) return;
+  const { error } = await supabase
+    .from('plans')
+    .delete()
+    .eq('id', planId);
   
   if (error) throw error;
 }

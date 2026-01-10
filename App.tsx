@@ -7,7 +7,7 @@ import { Auth } from './components/Auth';
 import { Welcome } from './components/Welcome';
 import { AdminDashboard } from './components/AdminDashboard';
 import { generateRoadmap } from './services/geminiService';
-import { supabase, getProfile, savePlan, getUserPlans } from './services/supabaseService';
+import { supabase, getProfile, savePlan, getUserPlans, deletePlan } from './services/supabaseService';
 import { UserPreferences, RoadmapResponse, Profile, SavedPlan } from './types';
 
 type View = 'planner' | 'admin' | 'my-plans' | 'auth' | 'welcome';
@@ -15,6 +15,7 @@ type View = 'planner' | 'admin' | 'my-plans' | 'auth' | 'welcome';
 const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [roadmap, setRoadmap] = useState<RoadmapResponse | null>(null);
+  const [activePlanId, setActivePlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [session, setSession] = useState<any>(null);
@@ -65,6 +66,7 @@ const App: React.FC = () => {
         if (event === 'SIGNED_OUT') {
           setCurrentView('welcome');
           setRoadmap(null);
+          setActivePlanId(null);
         }
       }
     });
@@ -105,15 +107,34 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDeletePlan = async (planId: string) => {
+    if (!window.confirm("Are you sure you want to permanently delete this roadmap from your library? This cannot be undone.")) return;
+    
+    try {
+      await deletePlan(planId);
+      setUserPlans(prev => prev.filter(p => p.id !== planId));
+      
+      // If we are currently viewing this plan, reset the view
+      if (activePlanId === planId) {
+        reset();
+      }
+    } catch (err: any) {
+      console.error("Delete plan failed:", err.message);
+      setError("Failed to delete roadmap.");
+    }
+  };
+
   const handleGenerate = async (prefs: UserPreferences) => {
     setLoading(true);
     setError(null);
     setSaveSuccess(false);
+    setActivePlanId(null);
     try {
       const result = await generateRoadmap(prefs);
       setRoadmap(result);
       if (session?.user && supabase) {
-        await savePlan(session.user.id, prefs, result);
+        const newId = await savePlan(session.user.id, prefs, result);
+        if (newId) setActivePlanId(newId);
         setSaveSuccess(true);
         loadUserPlans();
       }
@@ -133,6 +154,7 @@ const App: React.FC = () => {
 
   const reset = () => {
     setRoadmap(null);
+    setActivePlanId(null);
     setError(null);
     setSaveSuccess(false);
   };
@@ -185,7 +207,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Optimized Header for Mobile: reduced margin and enforced inline row */}
       <div className="flex flex-row justify-between items-center mb-6 md:mb-12 w-full gap-2">
         <div className="flex items-center gap-2 p-1 md:p-1.5 bg-white rounded-xl md:rounded-2xl shadow-sm border border-slate-100">
           {session ? (
@@ -251,7 +272,11 @@ const App: React.FC = () => {
               userId={session?.user?.id}
             />
           ) : (
-            <RoadmapDisplay data={roadmap} onReset={reset} />
+            <RoadmapDisplay 
+              data={roadmap} 
+              onReset={reset} 
+              onDelete={activePlanId ? () => handleDeletePlan(activePlanId) : undefined}
+            />
           )
         )}
 
@@ -281,14 +306,24 @@ const App: React.FC = () => {
                   <div 
                     key={p.id} 
                     className="glass group p-8 rounded-3xl border border-white hover:border-indigo-100 hover:shadow-2xl hover:shadow-indigo-50/50 transition-all cursor-pointer relative overflow-hidden" 
-                    onClick={() => { setRoadmap(p.plan_data); setCurrentView('planner'); }}
+                    onClick={() => { setRoadmap(p.plan_data); setActivePlanId(p.id); setCurrentView('planner'); }}
                   >
                     <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50/30 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-indigo-100 transition-colors"></div>
                     <div className="flex justify-between items-start mb-6 relative">
                       <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-indigo-100">
                         {p.skill}
                       </span>
-                      <span className="text-[10px] text-slate-300 font-bold">{new Date(p.created_at).toLocaleDateString()}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-300 font-bold">{new Date(p.created_at).toLocaleDateString()}</span>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleDeletePlan(p.id); }}
+                          className="p-2 text-slate-300 hover:text-red-500 transition-colors bg-white/50 hover:bg-red-50 rounded-lg"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors leading-tight">{p.experience} Roadmap</h3>
                     <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">{p.goal}</p>

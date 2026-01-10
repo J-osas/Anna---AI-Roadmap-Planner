@@ -5,9 +5,10 @@ import { RoadmapResponse } from '../types';
 interface RoadmapDisplayProps {
   data: RoadmapResponse;
   onReset: () => void;
+  onDelete?: () => void;
 }
 
-export const RoadmapDisplay: React.FC<RoadmapDisplayProps> = ({ data, onReset }) => {
+export const RoadmapDisplay: React.FC<RoadmapDisplayProps> = ({ data, onReset, onDelete }) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-700 w-full mx-auto">
       <div className="glass p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-xl border border-white relative overflow-hidden">
@@ -18,12 +19,23 @@ export const RoadmapDisplay: React.FC<RoadmapDisplayProps> = ({ data, onReset })
         </div>
         <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">{data.greeting}</h2>
         <p className="text-sm md:text-base text-slate-600 leading-relaxed mb-4">{data.intro}</p>
-        <button
-          onClick={onReset}
-          className="text-indigo-600 text-[10px] md:text-xs font-bold hover:text-indigo-700 underline transition-colors uppercase tracking-widest"
-        >
-          Start new roadmap
-        </button>
+        <div className="flex items-center gap-6">
+          <button
+            onClick={onReset}
+            className="text-indigo-600 text-[10px] md:text-xs font-bold hover:text-indigo-700 underline transition-colors uppercase tracking-widest"
+          >
+            Start new roadmap
+          </button>
+          {onDelete && (
+            <button
+              onClick={onDelete}
+              className="text-red-400 text-[10px] md:text-xs font-bold hover:text-red-600 transition-colors uppercase tracking-widest flex items-center gap-1.5"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              Delete this roadmap
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-3 md:gap-4">
