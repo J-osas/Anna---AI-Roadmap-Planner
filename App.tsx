@@ -45,7 +45,7 @@ const App: React.FC = () => {
           setCurrentView(prev => (prev === 'welcome' || prev === 'auth' ? 'planner' : prev));
         }
       } catch (err: any) {
-        console.error("Session initialization failed:", err.message);
+        console.error("Session initialization failed:", err);
       } finally {
         if (mounted) setAppInitialized(true);
       }
@@ -89,7 +89,7 @@ const App: React.FC = () => {
       const prof = await getProfile(userId);
       setProfile(prof);
     } catch (err: any) {
-      console.error("Profile fetch failed:", err.message);
+      console.error("Profile fetch failed:", err);
     }
   };
 
@@ -100,7 +100,7 @@ const App: React.FC = () => {
       const plans = await getUserPlans(session.user.id);
       setUserPlans(plans);
     } catch (err: any) {
-      console.error("Load plans failed:", err.message);
+      console.error("Load plans failed:", err);
       setError("Failed to load your roadmap library.");
     } finally {
       setLoading(false);
@@ -108,6 +108,7 @@ const App: React.FC = () => {
   };
 
   const handleDeletePlan = async (planId: string) => {
+    if (!planId) return;
     if (!window.confirm("Are you sure you want to permanently delete this roadmap from your library? This cannot be undone.")) return;
     
     try {
@@ -116,11 +117,12 @@ const App: React.FC = () => {
       
       // If we are currently viewing this plan, reset the view
       if (activePlanId === planId) {
-        reset();
+        setRoadmap(null);
+        setActivePlanId(null);
       }
     } catch (err: any) {
-      console.error("Delete plan failed:", err.message);
-      setError("Failed to delete roadmap.");
+      console.error("Delete plan failed:", err);
+      setError(err?.message ? String(err.message) : "Failed to delete roadmap.");
     }
   };
 
@@ -134,13 +136,15 @@ const App: React.FC = () => {
       setRoadmap(result);
       if (session?.user && supabase) {
         const newId = await savePlan(session.user.id, prefs, result);
-        if (newId) setActivePlanId(newId);
-        setSaveSuccess(true);
-        loadUserPlans();
+        if (newId) {
+          setActivePlanId(newId);
+          setSaveSuccess(true);
+          loadUserPlans();
+        }
       }
     } catch (err: any) {
-      console.error("Generation failed:", err.message || err);
-      setError("Something went wrong while generating your roadmap. Please check your connection and try again.");
+      console.error("Generation failed:", err);
+      setError(err?.message ? String(err.message) : "Something went wrong while generating your roadmap.");
     } finally {
       setLoading(false);
     }
@@ -251,7 +255,7 @@ const App: React.FC = () => {
 
       {error && (
         <div className="mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 flex items-center justify-between text-xs font-bold">
-          <span>{error}</span>
+          <span>{typeof error === 'string' ? error : JSON.stringify(error)}</span>
           <button onClick={reset} className="uppercase tracking-wider hover:opacity-70 transition-opacity">Dismiss</button>
         </div>
       )}
