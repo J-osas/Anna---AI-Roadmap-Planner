@@ -3,17 +3,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Anna - AI Roadmap Planner</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --app-height: 100%;
+    }
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      overscroll-behavior-y: none; /* Prevents pull-to-refresh bounce */
+      touch-action: manipulation;  /* Disables double-tap to zoom */
+      -webkit-tap-highlight-color: transparent;
+    }
     body {
       font-family: 'Inter', sans-serif;
       background: #f8fafc;
-      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     h1, h2, h3, .font-heading {
       font-family: 'Outfit', sans-serif;
@@ -28,7 +42,6 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    /* Simple support for tailwind-animate classes since we are using CDN */
     .animate-in {
       animation-duration: 700ms;
       animation-fill-mode: both;
@@ -63,14 +76,12 @@
       to { opacity: 1; transform: translateX(0); }
     }
 
-    /* Hide scrollbar for Chrome, Safari and Opera */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
-    /* Hide scrollbar for IE, Edge and Firefox */
     .no-scrollbar {
-      -ms-overflow-style: none;  /* IE and Edge */
-      scrollbar-width: none;  /* Firefox */
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
   </style>
 <script type="importmap">

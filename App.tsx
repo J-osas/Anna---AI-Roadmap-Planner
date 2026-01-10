@@ -28,7 +28,6 @@ const App: React.FC = () => {
     let mounted = true;
 
     if (!supabase) {
-      console.warn("Supabase keys missing. App running in offline mode.");
       setCurrentView('planner');
       setAppInitialized(true);
       return;
@@ -42,12 +41,10 @@ const App: React.FC = () => {
         setSession(initialSession);
         if (initialSession) {
           await fetchProfile(initialSession.user.id);
-          setCurrentView('planner');
-        } else {
-          setCurrentView('welcome');
+          setCurrentView(prev => (prev === 'welcome' || prev === 'auth' ? 'planner' : prev));
         }
-      } catch (err) {
-        console.error("Session initialization failed:", err);
+      } catch (err: any) {
+        console.error("Session initialization failed:", err.message);
       } finally {
         if (mounted) setAppInitialized(true);
       }
@@ -89,8 +86,8 @@ const App: React.FC = () => {
     try {
       const prof = await getProfile(userId);
       setProfile(prof);
-    } catch (err) {
-      console.error("Profile fetch failed:", err);
+    } catch (err: any) {
+      console.error("Profile fetch failed:", err.message);
     }
   };
 
@@ -100,8 +97,8 @@ const App: React.FC = () => {
     try {
       const plans = await getUserPlans(session.user.id);
       setUserPlans(plans);
-    } catch (err) {
-      console.error("Load plans failed:", err);
+    } catch (err: any) {
+      console.error("Load plans failed:", err.message);
       setError("Failed to load your roadmap library.");
     } finally {
       setLoading(false);
@@ -121,7 +118,7 @@ const App: React.FC = () => {
         loadUserPlans();
       }
     } catch (err: any) {
-      console.error("Generation failed:", err);
+      console.error("Generation failed:", err.message || err);
       setError("Something went wrong while generating your roadmap. Please check your connection and try again.");
     } finally {
       setLoading(false);
@@ -130,11 +127,7 @@ const App: React.FC = () => {
 
   const handleSignOut = async () => {
     if (supabase) {
-      try {
-        await supabase.auth.signOut();
-      } catch (err) {
-        console.error("Sign out failed:", err);
-      }
+      await supabase.auth.signOut();
     }
   };
 
@@ -150,7 +143,7 @@ const App: React.FC = () => {
         setCurrentView(view); 
         if(view === 'my-plans') loadUserPlans(); 
       }}
-      className={`relative px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-lg ${
+      className={`relative px-3 md:px-4 py-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all rounded-lg ${
         currentView === view 
           ? variant === 'admin' ? 'bg-purple-600 text-white shadow-lg shadow-purple-100' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
           : variant === 'admin' ? 'text-purple-600 hover:bg-purple-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
@@ -192,40 +185,41 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row justify-between items-center mb-12 w-full gap-6">
-        <div className="flex items-center gap-2 p-1.5 bg-white rounded-2xl shadow-sm border border-slate-100">
+      {/* Optimized Header for Mobile: reduced margin and enforced inline row */}
+      <div className="flex flex-row justify-between items-center mb-6 md:mb-12 w-full gap-2">
+        <div className="flex items-center gap-2 p-1 md:p-1.5 bg-white rounded-xl md:rounded-2xl shadow-sm border border-slate-100">
           {session ? (
             <>
               <NavLink view="planner" label="Planner" />
-              <NavLink view="my-plans" label="My Library" />
+              <NavLink view="my-plans" label="Library" />
               {profile?.role === 'admin' && <NavLink view="admin" label="Admin" variant="admin" />}
             </>
           ) : (
-            <div className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-300">
+            <div className="px-3 md:px-4 py-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-300">
               {currentView === 'welcome' ? 'Welcome' : 'Sign In'}
             </div>
           )}
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           {session ? (
-            <div className="flex items-center gap-4 bg-white pl-5 pr-2 py-1.5 rounded-2xl border border-slate-100 shadow-sm">
-              <div className="flex flex-col items-end">
+            <div className="flex items-center gap-2 md:gap-4 bg-white pl-3 md:pl-5 pr-1 md:pr-2 py-1 md:py-1.5 rounded-xl md:rounded-2xl border border-slate-100 shadow-sm">
+              <div className="hidden sm:flex flex-col items-end">
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter opacity-60">Connected</span>
-                <span className="text-[11px] font-bold text-slate-700 lowercase leading-none max-w-[120px] truncate">{session.user.email}</span>
+                <span className="text-[11px] font-bold text-slate-700 lowercase leading-none max-w-[80px] md:max-w-[120px] truncate">{session.user.email}</span>
               </div>
               <button 
                 onClick={handleSignOut} 
-                className="px-4 py-2.5 bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                className="px-3 md:px-4 py-2 md:py-2.5 bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-widest transition-all"
               >
-                Sign Out
+                Exit
               </button>
             </div>
           ) : (
             currentView === 'welcome' && (
               <button 
                 onClick={() => setCurrentView('auth')} 
-                className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-0.5"
+                className="px-4 md:px-6 py-2 md:py-2.5 bg-indigo-600 text-white rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-0.5"
               >
                 Sign In
               </button>
@@ -269,7 +263,7 @@ const App: React.FC = () => {
             </div>
             
             {userPlans.length === 0 && !loading ? (
-              <div className="glass p-20 rounded-[2.5rem] text-center border-dashed border-2 border-slate-200 bg-transparent">
+              <div className="glass p-10 md:p-20 rounded-[2.5rem] text-center border-dashed border-2 border-slate-200 bg-transparent">
                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
                 </div>

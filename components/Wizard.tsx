@@ -95,8 +95,8 @@ export const Wizard: React.FC<WizardProps> = ({ onSubmit, isLoading, initialName
     if (step === 1 && prefs.name && userId) {
       try {
         await updateProfileName(userId, prefs.name);
-      } catch (err) {
-        console.error("Failed to save name:", err);
+      } catch (err: any) {
+        console.error("Failed to save name:", err.message || err);
       }
     }
     setStep(s => Math.min(s + 1, totalSteps));
@@ -151,7 +151,6 @@ export const Wizard: React.FC<WizardProps> = ({ onSubmit, isLoading, initialName
 
   return (
     <div className="w-full mx-auto relative">
-      {/* Skill Info Modal omitted for brevity, same as previous version */}
       {activeInfo && SKILL_INFO[activeInfo] && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">

@@ -32,12 +32,13 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
-        <div>
+      {/* Mobile-optimized header: stacks vertically, centers elements */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 sm:gap-4">
+        <div className="text-center sm:text-left">
           <h2 className="text-2xl font-bold text-slate-900">Admin Dashboard</h2>
           <p className="text-xs text-slate-500">Platform overview and management</p>
         </div>
-        <div className="flex bg-slate-100 p-1 rounded-xl">
+        <div className="flex bg-slate-100 p-1 rounded-xl self-center sm:self-auto">
           <button 
             onClick={() => setTab('plans')}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${tab === 'plans' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
@@ -55,16 +56,16 @@ export const AdminDashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="glass p-5 rounded-2xl border border-white">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Users</p>
-          <p className="text-2xl font-bold text-slate-900">{users.length}</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center sm:text-left">Total Users</p>
+          <p className="text-2xl font-bold text-slate-900 text-center sm:text-left">{users.length}</p>
         </div>
         <div className="glass p-5 rounded-2xl border border-white">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Plans Generated</p>
-          <p className="text-2xl font-bold text-slate-900">{plans.length}</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center sm:text-left">Plans Generated</p>
+          <p className="text-2xl font-bold text-slate-900 text-center sm:text-left">{plans.length}</p>
         </div>
         <div className="glass p-5 rounded-2xl border border-white">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Today</p>
-          <p className="text-2xl font-bold text-slate-900">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center sm:text-left">Active Today</p>
+          <p className="text-2xl font-bold text-slate-900 text-center sm:text-left">
             {users.filter(u => new Date(u.created_at).toDateString() === new Date().toDateString()).length}
           </p>
         </div>
@@ -87,10 +88,10 @@ export const AdminDashboard: React.FC = () => {
                   <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4 text-xs font-medium text-slate-600">{(p as any).profiles?.email || 'Guest'}</td>
                     <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-[10px] font-bold uppercase">{p.skill}</span>
+                      <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-[10px] font-bold uppercase whitespace-nowrap">{p.skill}</span>
                     </td>
                     <td className="px-6 py-4 text-xs text-slate-500 max-w-xs truncate">{p.goal}</td>
-                    <td className="px-6 py-4 text-xs text-slate-400">{new Date(p.created_at).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 text-xs text-slate-400 whitespace-nowrap">{new Date(p.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>
