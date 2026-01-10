@@ -13,6 +13,7 @@
     body {
       font-family: 'Inter', sans-serif;
       background: #f8fafc;
+      overflow-x: hidden;
     }
     h1, h2, h3, .font-heading {
       font-family: 'Outfit', sans-serif;
@@ -27,6 +28,41 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
+    /* Simple support for tailwind-animate classes since we are using CDN */
+    .animate-in {
+      animation-duration: 700ms;
+      animation-fill-mode: both;
+    }
+    .fade-in {
+      animation-name: fadeIn;
+    }
+    .zoom-in-95 {
+      animation-name: zoomIn95;
+    }
+    .slide-in-from-bottom-8 {
+      animation-name: slideInFromBottom8;
+    }
+    .slide-in-from-right-4 {
+      animation-name: slideInFromRight4;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes zoomIn95 {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes slideInFromBottom8 {
+      from { opacity: 0; transform: translateY(2rem); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideInFromRight4 {
+      from { opacity: 0; transform: translateX(1rem); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
     /* Hide scrollbar for Chrome, Safari and Opera */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -51,5 +87,6 @@
 </head>
 <body>
   <div id="root"></div>
+  <script type="module" src="index.tsx"></script>
 </body>
 </html>

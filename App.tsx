@@ -25,6 +25,8 @@ const App: React.FC = () => {
 
   // Auth Initialization & Listener
   useEffect(() => {
+    let mounted = true;
+
     if (!supabase) {
       console.warn("Supabase keys missing. App running in offline mode.");
       setCurrentView('planner');
@@ -32,28 +34,34 @@ const App: React.FC = () => {
       return;
     }
 
-    // Check initial session
     const initSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      if (session) {
-        await fetchProfile(session.user.id);
-        setCurrentView('planner');
-      } else {
-        setCurrentView('welcome');
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        if (!mounted) return;
+
+        setSession(initialSession);
+        if (initialSession) {
+          await fetchProfile(initialSession.user.id);
+          setCurrentView('planner');
+        } else {
+          setCurrentView('welcome');
+        }
+      } catch (err) {
+        console.error("Session initialization failed:", err);
+      } finally {
+        if (mounted) setAppInitialized(true);
       }
-      setAppInitialized(true);
     };
 
     initSession();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      if (!mounted) return;
+      
       setSession(newSession);
       
       if (newSession) {
         await fetchProfile(newSession.user.id);
-        // Only redirect to planner if we're coming from welcome or auth
         setCurrentView(prev => (prev === 'auth' || prev === 'welcome' ? 'planner' : prev));
       } else {
         setProfile(null);
@@ -64,8 +72,11 @@ const App: React.FC = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, []); // Run only once on mount
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     if (saveSuccess) {
@@ -75,8 +86,12 @@ const App: React.FC = () => {
   }, [saveSuccess]);
 
   const fetchProfile = async (userId: string) => {
-    const prof = await getProfile(userId);
-    setProfile(prof);
+    try {
+      const prof = await getProfile(userId);
+      setProfile(prof);
+    } catch (err) {
+      console.error("Profile fetch failed:", err);
+    }
   };
 
   const loadUserPlans = async () => {
@@ -86,7 +101,8 @@ const App: React.FC = () => {
       const plans = await getUserPlans(session.user.id);
       setUserPlans(plans);
     } catch (err) {
-      console.error(err);
+      console.error("Load plans failed:", err);
+      setError("Failed to load your roadmap library.");
     } finally {
       setLoading(false);
     }
@@ -102,11 +118,10 @@ const App: React.FC = () => {
       if (session?.user && supabase) {
         await savePlan(session.user.id, prefs, result);
         setSaveSuccess(true);
-        // Refresh library in background
         loadUserPlans();
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error("Generation failed:", err);
       setError("Something went wrong while generating your roadmap. Please check your connection and try again.");
     } finally {
       setLoading(false);
@@ -114,7 +129,13 @@ const App: React.FC = () => {
   };
 
   const handleSignOut = async () => {
-    if (supabase) await supabase.auth.signOut();
+    if (supabase) {
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.error("Sign out failed:", err);
+      }
+    }
   };
 
   const reset = () => {
@@ -145,8 +166,9 @@ const App: React.FC = () => {
   if (!appInitialized) {
     return (
       <Layout>
-        <div className="flex items-center justify-center py-40">
+        <div className="flex flex-col items-center justify-center py-40 gap-4">
           <div className="animate-spin h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full" />
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Waking up Anna...</p>
         </div>
       </Layout>
     );
@@ -154,7 +176,6 @@ const App: React.FC = () => {
 
   return (
     <Layout>
-      {/* Floating Success Toast */}
       {saveSuccess && (
         <div 
           onClick={() => setSaveSuccess(false)}
@@ -171,7 +192,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Navigation Header */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-12 w-full gap-6">
         <div className="flex items-center gap-2 p-1.5 bg-white rounded-2xl shadow-sm border border-slate-100">
           {session ? (
@@ -221,7 +241,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* View Logic */}
       <div className="w-full">
         {currentView === 'welcome' && !session && (
           <Welcome onGetStarted={() => setCurrentView('auth')} />
@@ -249,7 +268,7 @@ const App: React.FC = () => {
               <p className="text-sm text-slate-500 font-medium">Pick up where you left off or explore new paths.</p>
             </div>
             
-            {userPlans.length === 0 ? (
+            {userPlans.length === 0 && !loading ? (
               <div className="glass p-20 rounded-[2.5rem] text-center border-dashed border-2 border-slate-200 bg-transparent">
                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
