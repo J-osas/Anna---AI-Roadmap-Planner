@@ -28,9 +28,18 @@ const App: React.FC = () => {
   useEffect(() => {
     let mounted = true;
 
+    // Safety timeout: If initialization takes > 2.5s, force show the app
+    const safetyTimeout = setTimeout(() => {
+      if (mounted && !appInitialized) {
+        console.warn("Initialization taking too long, forcing start...");
+        setAppInitialized(true);
+      }
+    }, 2500);
+
     if (!supabase) {
       setCurrentView('planner');
       setAppInitialized(true);
+      clearTimeout(safetyTimeout);
       return;
     }
 
@@ -43,11 +52,17 @@ const App: React.FC = () => {
         if (initialSession) {
           await fetchProfile(initialSession.user.id);
           setCurrentView(prev => (prev === 'welcome' || prev === 'auth' ? 'planner' : prev));
+        } else {
+          // If no session, ensure we are on welcome or auth
+          setCurrentView(prev => (prev === 'planner' || prev === 'my-plans' || prev === 'admin') ? 'welcome' : prev);
         }
       } catch (err: any) {
         console.error("Session initialization failed:", err);
       } finally {
-        if (mounted) setAppInitialized(true);
+        if (mounted) {
+          setAppInitialized(true);
+          clearTimeout(safetyTimeout);
+        }
       }
     };
 
@@ -73,6 +88,7 @@ const App: React.FC = () => {
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
   }, []);
@@ -187,7 +203,7 @@ const App: React.FC = () => {
       <Layout>
         <div className="flex flex-col items-center justify-center py-40 gap-4">
           <div className="animate-spin h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full" />
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Waking up Anna...</p>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Waking up Anna...</p>
         </div>
       </Layout>
     );
@@ -241,7 +257,7 @@ const App: React.FC = () => {
               </button>
             </div>
           ) : (
-            currentView === 'welcome' && (
+            (currentView === 'welcome' || currentView === 'planner') && (
               <button 
                 onClick={() => setCurrentView('auth')} 
                 className="px-4 md:px-6 py-2 md:py-2.5 bg-indigo-600 text-white rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-0.5"
