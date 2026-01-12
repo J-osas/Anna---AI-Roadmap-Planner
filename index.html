@@ -15,6 +15,21 @@
             sans: ['Inter', 'sans-serif'],
             heading: ['Outfit', 'sans-serif'],
           },
+          colors: {
+            // Overriding indigo palette to implement #f56e0f as the primary brand color throughout the app
+            indigo: {
+              50: '#fff8f1',
+              100: '#feecdc',
+              200: '#fdd8b9',
+              300: '#fbb986',
+              400: '#f9914d',
+              500: '#f77526',
+              600: '#f56e0f', // Base primary color
+              700: '#d1590a',
+              800: '#ae4b0c',
+              900: '#8f3f0e',
+            }
+          },
         },
       },
     }
@@ -60,7 +75,7 @@
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
     .gradient-text {
-      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      background: linear-gradient(135deg, #f56e0f 0%, #a855f7 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
