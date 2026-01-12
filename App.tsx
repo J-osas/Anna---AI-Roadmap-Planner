@@ -198,6 +198,10 @@ const App: React.FC = () => {
   };
 
   const reset = () => {
+    if (roadmap) {
+      const confirmed = window.confirm('Are you sure you want to create a new roadmap? Your current plan will be lost.');
+      if (!confirmed) return;
+    }
     setRoadmap(null);
     setActivePlanId(null);
     setError(null);
@@ -210,7 +214,7 @@ const App: React.FC = () => {
         setCurrentView(view); 
         if(view === 'my-plans') loadUserPlans(); 
       }}
-      className={`relative px-3 md:px-4 py-2 text-[9px] md:text-[10px] font-black uppercase tracking-wider transition-all rounded-lg ${
+      className={`relative px-3 md:px-4 py-2 text-[9px] md:text-[10px] font-black uppercase tracking-normal transition-all rounded-lg ${
         currentView === view 
           ? variant === 'admin' 
             ? 'bg-purple-600 text-white shadow-lg shadow-purple-100 dark:shadow-none' 
@@ -232,7 +236,7 @@ const App: React.FC = () => {
       <Layout>
         <div className="flex flex-col items-center justify-center py-40 gap-4">
           <div className="animate-spin h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full" />
-          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider animate-pulse">Waking up Anna...</p>
+          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-normal animate-pulse">Waking up Anna...</p>
         </div>
       </Layout>
     );
@@ -256,8 +260,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Header layout optimized for horizontal alignment on mobile */}
-      <div className="flex flex-row justify-between items-center mb-6 md:mb-12 w-full gap-2">
+      {/* Optimized header layout to stay inline on mobile */}
+      <div className="flex flex-row flex-nowrap justify-between items-center mb-6 md:mb-12 w-full gap-2">
         <div className="flex items-center gap-1.5 md:gap-2 p-1 md:p-1.5 bg-white dark:bg-slate-900 rounded-xl md:rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
           {session ? (
             <>
@@ -266,13 +270,13 @@ const App: React.FC = () => {
               {profile?.role === 'admin' && <NavLink view="admin" label="Admin" variant="admin" />}
             </>
           ) : (
-            <div className="px-3 md:px-4 py-2 text-[9px] md:text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <div className="px-2 md:px-4 py-2 text-[10px] font-black uppercase tracking-normal text-slate-400 dark:text-slate-500 whitespace-nowrap">
               {currentView === 'welcome' ? 'Welcome' : 'Sign In'}
             </div>
           )}
         </div>
         
-        <div className="flex items-center gap-2 md:gap-4 overflow-hidden shrink-0">
+        <div className="flex items-center gap-1.5 md:gap-4 shrink-0">
           {/* Theme Toggle Button */}
           <button 
             onClick={toggleTheme}
@@ -287,14 +291,14 @@ const App: React.FC = () => {
           </button>
 
           {session ? (
-            <div className="flex items-center gap-2 md:gap-4 bg-white dark:bg-slate-900 pl-3 md:pl-5 pr-1 md:pr-2 py-1 md:py-1.5 rounded-xl md:rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm max-w-[150px] md:max-w-none">
+            <div className="flex items-center gap-1.5 md:gap-4 bg-white dark:bg-slate-900 pl-2 md:pl-5 pr-1 md:pr-2 py-1 md:py-1.5 rounded-xl md:rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm max-w-[120px] md:max-w-none">
               <div className="hidden sm:flex flex-col items-end">
                 <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tighter opacity-60">Connected</span>
                 <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 lowercase leading-none max-w-[80px] md:max-w-[120px] truncate">{session.user.email}</span>
               </div>
               <button 
                 onClick={handleSignOut} 
-                className="px-2 md:px-4 py-2 md:py-2.5 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-wider transition-all"
+                className="px-2 md:px-4 py-2 md:py-2.5 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-normal transition-all whitespace-nowrap"
               >
                 Exit
               </button>
@@ -303,7 +307,7 @@ const App: React.FC = () => {
             (currentView === 'welcome' || currentView === 'planner' || currentView === 'auth') && (
               <button 
                 onClick={() => setCurrentView('auth')} 
-                className="px-3 md:px-6 py-2 md:py-2.5 bg-indigo-600 text-white rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider transition-all shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 hover:-translate-y-0.5 whitespace-nowrap"
+                className="px-3 md:px-6 py-2 md:py-2.5 bg-indigo-600 text-white rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-normal transition-all shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 hover:-translate-y-0.5 whitespace-nowrap"
               >
                 Sign In
               </button>
@@ -373,7 +377,7 @@ const App: React.FC = () => {
                   >
                     <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 dark:bg-indigo-900/20 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-800/30 transition-colors"></div>
                     <div className="flex justify-between items-start mb-6 relative">
-                      <span className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-wider rounded-lg border border-indigo-100 dark:border-indigo-900/50">
+                      <span className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-normal rounded-lg border border-indigo-100 dark:border-indigo-900/50">
                         {p.skill}
                       </span>
                       <div className="flex items-center gap-2">
@@ -391,7 +395,7 @@ const App: React.FC = () => {
                     <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">{p.experience} Roadmap</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">{p.goal}</p>
                     <div className="mt-6 pt-4 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">View Roadmap</span>
+                      <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-normal">View Roadmap</span>
                       <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                     </div>
                   </div>

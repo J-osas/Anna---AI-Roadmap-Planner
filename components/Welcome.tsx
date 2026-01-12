@@ -18,7 +18,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ onGetStarted }) => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
             </span>
-            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Anna AI is Live</span>
+            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-normal text-indigo-600 dark:text-indigo-400">Anna AI is Live</span>
           </div>
 
           <h1 className="text-3xl md:text-6xl font-black text-slate-900 dark:text-white mb-4 md:mb-6 tracking-tight leading-[1.1] px-2">
@@ -36,17 +36,17 @@ export const Welcome: React.FC<WelcomeProps> = ({ onGetStarted }) => {
             </p>
           </div>
 
-          {/* Action area changed to flex-row to prevent vertical stacking on mobile */}
-          <div className="flex flex-row items-center justify-center gap-4 px-2 sm:px-6">
+          {/* Action area forced to flex-nowrap to prevent vertical stacking on mobile */}
+          <div className="flex flex-row flex-nowrap items-center justify-center gap-3 md:gap-4 px-2 sm:px-6">
             <button
               onClick={onGetStarted}
-              className="group relative px-6 md:px-10 py-4 md:py-5 bg-indigo-600 text-white rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-wider shadow-xl shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 hover:-translate-y-1 transition-all active:translate-y-0 w-auto whitespace-nowrap"
+              className="group relative px-5 md:px-10 py-4 md:py-5 bg-indigo-600 text-white rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-normal shadow-xl shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 hover:-translate-y-1 transition-all active:translate-y-0 w-auto whitespace-nowrap flex-shrink-0"
             >
               Get Started for Free
               <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </button>
-            <p className="hidden xs:block text-[9px] md:text-xs text-slate-400 dark:text-slate-600 font-bold uppercase tracking-wider text-left leading-tight max-w-[80px] md:max-w-none">
-              Join 1,000+ AI Students
+            <p className="text-[9px] md:text-xs text-slate-400 dark:text-slate-600 font-bold uppercase tracking-normal text-left leading-tight max-w-[70px] md:max-w-none flex-shrink-0">
+              Join 1,000+ <br className="md:hidden" /> AI Students
             </p>
           </div>
         </div>
