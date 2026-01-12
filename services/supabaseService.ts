@@ -84,7 +84,8 @@ export async function getAllUsers(): Promise<Profile[]> {
 
 /**
  * Fetches all plans with user emails. 
- * Includes a fallback if the database relationship (Foreign Key) isn't set up yet.
+ * If a direct database JOIN fails (e.g., due to relationship mapping between public/auth schemas),
+ * it performs a manual in-memory join silently to ensure the UI remains clean and functional.
  */
 export async function getAllPlans(): Promise<SavedPlan[]> {
   if (!supabase) return [];
@@ -95,30 +96,26 @@ export async function getAllPlans(): Promise<SavedPlan[]> {
     .select('*, profiles(email)')
     .order('created_at', { ascending: false });
   
-  // 2. If relationship is missing (Error code PGRST200), do manual in-memory join
-  if (error) {
-    if (error.code === 'PGRST200') {
-      console.warn("Database relationship missing. Performing manual join. Fix: Add Foreign Key on plans.user_id -> auth.users.id");
-      
-      const [plansRes, profilesRes] = await Promise.all([
-        supabase.from('plans').select('*').order('created_at', { ascending: false }),
-        supabase.from('profiles').select('id, email')
-      ]);
+  // 2. If relationship join fails (PGRST200 is relationship missing), perform manual join silently
+  if (error && error.code === 'PGRST200') {
+    const [plansRes, profilesRes] = await Promise.all([
+      supabase.from('plans').select('*').order('created_at', { ascending: false }),
+      supabase.from('profiles').select('id, email')
+    ]);
 
-      if (plansRes.error) throw plansRes.error;
-      
-      const profileMap = (profilesRes.data || []).reduce((acc: any, p: any) => {
-        acc[p.id] = p;
-        return acc;
-      }, {});
+    if (plansRes.error) throw plansRes.error;
+    
+    const profileMap = (profilesRes.data || []).reduce((acc: any, p: any) => {
+      acc[p.id] = p;
+      return acc;
+    }, {});
 
-      return (plansRes.data || []).map((plan: any) => ({
-        ...plan,
-        profiles: profileMap[plan.user_id] || { email: 'Unknown User' }
-      })) as SavedPlan[];
-    }
-    throw error;
+    return (plansRes.data || []).map((plan: any) => ({
+      ...plan,
+      profiles: profileMap[plan.user_id] || { email: 'Unknown User' }
+    })) as SavedPlan[];
   }
   
+  if (error) throw error;
   return data as SavedPlan[];
 }

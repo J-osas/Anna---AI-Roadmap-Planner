@@ -26,7 +26,7 @@ const App: React.FC = () => {
   const [appInitialized, setAppInitialized] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('anna-theme');
-    // Default to dark mode as requested
+    // Dark mode by default as requested
     return (saved as Theme) || 'dark';
   });
 
@@ -260,7 +260,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Optimized header layout to stay inline on mobile */}
+      {/* Side-by-side header layout for mobile as requested */}
       <div className="flex flex-row flex-nowrap justify-between items-center mb-6 md:mb-12 w-full gap-2">
         <div className="flex items-center gap-1.5 md:gap-2 p-1 md:p-1.5 bg-white dark:bg-slate-900 rounded-xl md:rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 shrink-0">
           {session ? (
@@ -277,7 +277,6 @@ const App: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-1.5 md:gap-4 shrink-0">
-          {/* Theme Toggle Button */}
           <button 
             onClick={toggleTheme}
             className="p-2 md:p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all flex-shrink-0"
