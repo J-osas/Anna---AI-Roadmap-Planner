@@ -29,7 +29,19 @@ const App: React.FC = () => {
     return (saved as Theme) || 'light';
   });
 
-  // Theme synchronization
+  // Helper to safely extract error message from any type of error object
+  const getErrorMessage = (err: any): string => {
+    if (!err) return "An unexpected error occurred.";
+    if (typeof err === 'string') return err;
+    if (err.message && typeof err.message === 'string') return err.message;
+    if (err.error_description && typeof err.error_description === 'string') return err.error_description;
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return String(err);
+    }
+  };
+
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -39,7 +51,6 @@ const App: React.FC = () => {
     localStorage.setItem('anna-theme', theme);
   }, [theme]);
 
-  // Auth Initialization & Listener
   useEffect(() => {
     let mounted = true;
 
@@ -151,7 +162,7 @@ const App: React.FC = () => {
       }
     } catch (err: any) {
       console.error("Delete plan failed:", err);
-      setError(err?.message ? String(err.message) : "Failed to delete roadmap.");
+      setError(getErrorMessage(err));
     }
   };
 
@@ -173,7 +184,7 @@ const App: React.FC = () => {
       }
     } catch (err: any) {
       console.error("Generation failed:", err);
-      setError(err?.message ? String(err.message) : "Something went wrong while generating your roadmap.");
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -260,7 +271,6 @@ const App: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-2 md:gap-4">
-          {/* Theme Toggle Button */}
           <button 
             onClick={toggleTheme}
             className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
@@ -301,7 +311,7 @@ const App: React.FC = () => {
 
       {error && (
         <div className="mb-8 p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-2xl text-red-600 dark:text-red-400 flex items-center justify-between text-xs font-bold">
-          <span>{typeof error === 'string' ? error : JSON.stringify(error)}</span>
+          <span className="max-w-[80%] break-words">{error}</span>
           <button onClick={reset} className="uppercase tracking-wider hover:opacity-70 transition-opacity">Dismiss</button>
         </div>
       )}

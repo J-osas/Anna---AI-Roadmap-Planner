@@ -7,16 +7,20 @@ export const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<Profile[]>([]);
   const [plans, setPlans] = useState<SavedPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<'users' | 'plans'>('plans');
 
   useEffect(() => {
     async function loadData() {
+      setError(null);
+      setLoading(true);
       try {
         const [u, p] = await Promise.all([getAllUsers(), getAllPlans()]);
         setUsers(u);
         setPlans(p);
-      } catch (err) {
-        console.error(err);
+      } catch (err: any) {
+        console.error("Admin data load failed:", err);
+        setError(err.message || "Failed to load dashboard data.");
       } finally {
         setLoading(false);
       }
@@ -52,6 +56,13 @@ export const AdminDashboard: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-xl text-red-600 dark:text-red-400 text-xs font-bold flex flex-col gap-1">
+          <p>⚠️ Dashboard Error:</p>
+          <p className="opacity-70 font-medium">{error}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="glass p-5 rounded-2xl border border-white dark:border-slate-800">

@@ -82,13 +82,43 @@ export async function getAllUsers(): Promise<Profile[]> {
   return data as Profile[];
 }
 
+/**
+ * Fetches all plans with user emails. 
+ * Includes a fallback if the database relationship (Foreign Key) isn't set up yet.
+ */
 export async function getAllPlans(): Promise<SavedPlan[]> {
   if (!supabase) return [];
+  
+  // 1. Try with the relationship JOIN
   const { data, error } = await supabase
     .from('plans')
     .select('*, profiles(email)')
     .order('created_at', { ascending: false });
   
-  if (error) throw error;
+  // 2. If relationship is missing (Error code PGRST200), do manual in-memory join
+  if (error) {
+    if (error.code === 'PGRST200') {
+      console.warn("Database relationship missing. Performing manual join. Fix: Add Foreign Key on plans.user_id -> auth.users.id");
+      
+      const [plansRes, profilesRes] = await Promise.all([
+        supabase.from('plans').select('*').order('created_at', { ascending: false }),
+        supabase.from('profiles').select('id, email')
+      ]);
+
+      if (plansRes.error) throw plansRes.error;
+      
+      const profileMap = (profilesRes.data || []).reduce((acc: any, p: any) => {
+        acc[p.id] = p;
+        return acc;
+      }, {});
+
+      return (plansRes.data || []).map((plan: any) => ({
+        ...plan,
+        profiles: profileMap[plan.user_id] || { email: 'Unknown User' }
+      })) as SavedPlan[];
+    }
+    throw error;
+  }
+  
   return data as SavedPlan[];
 }
