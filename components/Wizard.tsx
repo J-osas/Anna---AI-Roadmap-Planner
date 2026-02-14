@@ -139,6 +139,11 @@ export const Wizard: React.FC<WizardProps> = ({ onSubmit, isLoading, initialName
         [ExperienceLevel.BEGINNER]: ["Launch a faceless YouTube channel", "Create AI short-form ads", "Offer AI avatars for local shops"],
         [ExperienceLevel.INTERMEDIATE]: ["Build an AI production studio", "Create high-end AI music videos", "Automate video outreach"],
         [ExperienceLevel.PROFESSIONAL]: ["Integrate AI in film workflows", "Develop AI-native video SaaS", "Lead AI video pipelines"]
+      },
+      'AI Business Strategy': {
+        [ExperienceLevel.BEGINNER]: ["Launch an AI tool auditing service", "Train small teams on AI productivity", "Offer free AI strategy sessions"],
+        [ExperienceLevel.INTERMEDIATE]: ["Consult for mid-sized tech firms", "Build an AI ROI calculator tool", "Create custom AI governance policies"],
+        [ExperienceLevel.PROFESSIONAL]: ["Lead Enterprise AI digital transformations", "Partner with VC firms for AI due diligence", "Keynote speak on AI business ethics"]
       }
     };
 
@@ -151,26 +156,40 @@ export const Wizard: React.FC<WizardProps> = ({ onSubmit, isLoading, initialName
     <div className="w-full mx-auto relative">
       {activeInfo && SKILL_INFO[activeInfo] && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-transparent dark:border-slate-800">
-            <div className="p-6 bg-gradient-to-tr from-indigo-600 to-purple-600 text-white relative">
-              <button onClick={() => setActiveInfo(null)} className="absolute top-4 right-4 p-1 rounded-full bg-white/20 hover:bg-white/30 transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-transparent dark:border-slate-800">
+            <div className="p-8 bg-gradient-to-tr from-indigo-600 to-indigo-700 text-white relative">
+              <button onClick={() => setActiveInfo(null)} className="absolute top-6 right-6 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <span>{SKILL_PRESETS.find(p => p.label === activeInfo)?.icon}</span>
-                {activeInfo}
-              </h3>
+              <div className="text-4xl mb-4">{SKILL_PRESETS.find(p => p.label === activeInfo)?.icon}</div>
+              <h3 className="text-2xl font-black tracking-tight">{activeInfo}</h3>
             </div>
-            <div className="p-6 space-y-5">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">What it is</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{SKILL_INFO[activeInfo].definition}</p>
+            <div className="p-8 space-y-6">
+              <div className="space-y-2">
+                <p className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">Description</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium">{SKILL_INFO[activeInfo].definition}</p>
               </div>
-              <div className="space-y-1">
+              
+              <div className="space-y-2">
+                <p className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">Key Pillars</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {SKILL_INFO[activeInfo].entails.map((pillar, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50">
+                      <div className="w-1 h-1 rounded-full bg-indigo-500"></div>
+                      <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{pillar}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <p className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">Earning Potential</p>
-                <p className="text-sm font-bold text-slate-900 dark:text-white">{SKILL_INFO[activeInfo].earning}</p>
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-900/50">
+                  <p className="text-sm font-black text-indigo-700 dark:text-indigo-300">{SKILL_INFO[activeInfo].earning}</p>
+                </div>
               </div>
-              <button onClick={() => setActiveInfo(null)} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors">Got it!</button>
+
+              <button onClick={() => setActiveInfo(null)} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none">Got it!</button>
             </div>
           </div>
         </div>
