@@ -2,7 +2,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { UserPreferences, RoadmapResponse } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// The API key must be obtained exclusively from the environment variable process.env.API_KEY.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const SYSTEM_INSTRUCTION = `You are Anna, an AI Roadmap Planner. Your role is to create customized 7-step action plans for users who want to learn profitable AI skills without coding.
 
@@ -55,7 +56,10 @@ export async function generateRoadmap(prefs: UserPreferences): Promise<RoadmapRe
       }
     });
 
-    const result = JSON.parse(response.text || '{}');
+    const text = response.text;
+    if (!text) throw new Error("Empty response from AI");
+    
+    const result = JSON.parse(text.trim());
     return result as RoadmapResponse;
   } catch (error) {
     console.error("Error generating roadmap:", error);

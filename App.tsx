@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from './components/Layout';
 import { Wizard } from './components/Wizard';
 import { RoadmapDisplay } from './components/RoadmapDisplay';
@@ -30,31 +30,34 @@ const App: React.FC = () => {
     return (saved as Theme) || 'dark';
   });
 
+  const isMounted = useRef(true);
+
   const getErrorMessage = (err: any): string => {
     if (!err) return "An unexpected error occurred.";
     if (typeof err === 'string') return err;
+    if (err.name === 'AbortError') return "The request was interrupted. Please try again.";
     if (err.message && typeof err.message === 'string') return err.message;
-    if (err.error_description && typeof err.error_description === 'string') return err.error_description;
     return String(err);
   };
 
   useEffect(() => {
+    isMounted.current = true;
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
     localStorage.setItem('anna-theme', theme);
+    return () => { isMounted.current = false; };
   }, [theme]);
 
   useEffect(() => {
-    let mounted = true;
+    let active = true;
     const safetyTimeout = setTimeout(() => {
-      if (mounted && !appInitialized) setAppInitialized(true);
+      if (active && !appInitialized) setAppInitialized(true);
     }, 2500);
 
     if (!supabase) {
-      setCurrentView('planner');
       setAppInitialized(true);
       clearTimeout(safetyTimeout);
       return;
@@ -63,18 +66,17 @@ const App: React.FC = () => {
     const initSession = async () => {
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        if (!mounted) return;
+        if (!active) return;
         setSession(initialSession);
         if (initialSession) {
-          await fetchProfile(initialSession.user.id);
+          const prof = await getProfile(initialSession.user.id);
+          if (active) setProfile(prof);
           setCurrentView(prev => (prev === 'welcome' || prev === 'auth' ? 'planner' : prev));
-        } else {
-          setCurrentView(prev => (prev === 'planner' || prev === 'my-plans' || prev === 'admin') ? 'welcome' : prev);
         }
       } catch (err) {
-        console.error("Session initialization failed:", err);
+        console.warn("Session initialization failed silently:", err);
       } finally {
-        if (mounted) {
+        if (active) {
           setAppInitialized(true);
           clearTimeout(safetyTimeout);
         }
@@ -84,10 +86,11 @@ const App: React.FC = () => {
     initSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      if (!mounted) return;
+      if (!active) return;
       setSession(newSession);
       if (newSession) {
-        await fetchProfile(newSession.user.id);
+        const prof = await getProfile(newSession.user.id);
+        if (active) setProfile(prof);
         setCurrentView(prev => (prev === 'auth' || prev === 'welcome' ? 'planner' : prev));
       } else {
         setProfile(null);
@@ -100,7 +103,7 @@ const App: React.FC = () => {
     });
 
     return () => {
-      mounted = false;
+      active = false;
       clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
@@ -115,25 +118,16 @@ const App: React.FC = () => {
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
-  const fetchProfile = async (userId: string) => {
-    try {
-      const prof = await getProfile(userId);
-      setProfile(prof);
-    } catch (err) {
-      console.error("Profile fetch failed:", err);
-    }
-  };
-
   const loadUserPlans = async () => {
     if (!session?.user || !supabase) return;
     setLoading(true);
     try {
       const plans = await getUserPlans(session.user.id);
-      setUserPlans(plans);
+      if (isMounted.current) setUserPlans(plans);
     } catch (err) {
-      setError("Failed to load your roadmap library.");
+      if (isMounted.current) setError("Failed to load your roadmap library.");
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   };
 
@@ -141,15 +135,19 @@ const App: React.FC = () => {
     if (!planToDelete) return;
     try {
       await deletePlan(planToDelete);
-      setUserPlans(prev => prev.filter(p => p.id !== planToDelete));
-      if (activePlanId === planToDelete) {
-        setRoadmap(null);
-        setActivePlanId(null);
+      if (isMounted.current) {
+        setUserPlans(prev => prev.filter(p => p.id !== planToDelete));
+        if (activePlanId === planToDelete) {
+          setRoadmap(null);
+          setActivePlanId(null);
+        }
+        setPlanToDelete(null);
       }
-      setPlanToDelete(null);
     } catch (err: any) {
-      setError(getErrorMessage(err));
-      setPlanToDelete(null);
+      if (isMounted.current) {
+        setError(getErrorMessage(err));
+        setPlanToDelete(null);
+      }
     }
   };
 
@@ -160,19 +158,20 @@ const App: React.FC = () => {
     setActivePlanId(null);
     try {
       const result = await generateRoadmap(prefs);
+      if (!isMounted.current) return;
       setRoadmap(result);
       if (session?.user && supabase) {
         const newId = await savePlan(session.user.id, prefs, result);
-        if (newId) {
+        if (isMounted.current && newId) {
           setActivePlanId(newId);
           setSaveSuccess(true);
           loadUserPlans();
         }
       }
     } catch (err: any) {
-      setError(getErrorMessage(err));
+      if (isMounted.current) setError(getErrorMessage(err));
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   };
 
@@ -227,7 +226,6 @@ const App: React.FC = () => {
 
   return (
     <Layout>
-      {/* Custom Deletion Modal */}
       {planToDelete && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="glass w-full max-w-sm rounded-[2rem] p-8 border border-white dark:border-slate-800 shadow-2xl animate-in zoom-in-95 duration-300 text-center">
@@ -237,33 +235,18 @@ const App: React.FC = () => {
             <h3 className="text-xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">Delete Roadmap?</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 font-medium leading-relaxed">Are you sure you want to permanently delete this roadmap? This action cannot be undone.</p>
             <div className="flex flex-col gap-3">
-              <button 
-                onClick={confirmDelete}
-                className="w-full py-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-red-100 dark:shadow-none"
-              >
-                Permanently Delete
-              </button>
-              <button 
-                onClick={() => setPlanToDelete(null)}
-                className="w-full py-4 text-slate-400 dark:text-slate-500 font-black text-[10px] uppercase tracking-widest hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-              >
-                Keep Roadmap
-              </button>
+              <button onClick={confirmDelete} className="w-full py-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-red-100 dark:shadow-none">Permanently Delete</button>
+              <button onClick={() => setPlanToDelete(null)} className="w-full py-4 text-slate-400 dark:text-slate-500 font-black text-[10px] uppercase tracking-widest hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Keep Roadmap</button>
             </div>
           </div>
         </div>
       )}
 
       {saveSuccess && (
-        <div 
-          onClick={() => setSaveSuccess(false)}
-          className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] cursor-pointer animate-in fade-in slide-in-from-top-4 duration-500"
-        >
+        <div onClick={() => setSaveSuccess(false)} className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] cursor-pointer animate-in fade-in slide-in-from-top-4 duration-500">
           <div className="bg-emerald-600 text-white px-6 py-3 rounded-full shadow-2xl shadow-emerald-200 dark:shadow-none flex items-center gap-3 border border-emerald-500">
             <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
-              </svg>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>
             </div>
             <span className="text-xs font-bold tracking-wide">Saved to Library!</span>
           </div>
@@ -286,11 +269,7 @@ const App: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-1.5 md:gap-4 shrink-0">
-          <button 
-            onClick={toggleTheme}
-            className="p-2 md:p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all flex-shrink-0"
-            aria-label="Toggle theme"
-          >
+          <button onClick={toggleTheme} className="p-2 md:p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all flex-shrink-0" aria-label="Toggle theme">
             {theme === 'light' ? (
               <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
             ) : (
@@ -304,21 +283,11 @@ const App: React.FC = () => {
                 <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tighter opacity-60">Connected</span>
                 <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 lowercase leading-none max-w-[80px] md:max-w-[120px] truncate">{session.user.email}</span>
               </div>
-              <button 
-                onClick={handleSignOut} 
-                className="px-2 md:px-4 py-2 md:py-2.5 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-normal transition-all whitespace-nowrap"
-              >
-                Exit
-              </button>
+              <button onClick={handleSignOut} className="px-2 md:px-4 py-2 md:py-2.5 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-normal transition-all whitespace-nowrap">Exit</button>
             </div>
           ) : (
             (currentView === 'welcome' || currentView === 'planner' || currentView === 'auth') && (
-              <button 
-                onClick={() => setCurrentView('auth')} 
-                className="px-3 md:px-6 py-2 md:py-2.5 bg-indigo-600 text-white rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-normal transition-all shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 hover:-translate-y-0.5 whitespace-nowrap"
-              >
-                Sign In
-              </button>
+              <button onClick={() => setCurrentView('auth')} className="px-3 md:px-6 py-2 md:py-2.5 bg-indigo-600 text-white rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-normal transition-all shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 hover:-translate-y-0.5 whitespace-nowrap">Sign In</button>
             )
           )}
         </div>
@@ -338,11 +307,7 @@ const App: React.FC = () => {
           !roadmap ? (
             <Wizard onSubmit={handleGenerate} isLoading={loading} initialName={profile?.full_name} userId={session?.user?.id} />
           ) : (
-            <RoadmapDisplay 
-              data={roadmap} 
-              onReset={reset} 
-              onDelete={activePlanId ? () => setPlanToDelete(activePlanId) : undefined}
-            />
+            <RoadmapDisplay data={roadmap} onReset={reset} onDelete={activePlanId ? () => setPlanToDelete(activePlanId) : undefined} />
           )
         )}
         {currentView === 'my-plans' && session && (
