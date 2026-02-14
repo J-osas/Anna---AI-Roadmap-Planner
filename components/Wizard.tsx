@@ -140,14 +140,48 @@ export const Wizard: React.FC<WizardProps> = ({ onSubmit, isLoading, initialName
         [ExperienceLevel.INTERMEDIATE]: ["Build an AI production studio", "Create high-end AI music videos", "Automate video outreach"],
         [ExperienceLevel.PROFESSIONAL]: ["Integrate AI in film workflows", "Develop AI-native video SaaS", "Lead AI video pipelines"]
       },
+      'AI Marketing': {
+        [ExperienceLevel.BEGINNER]: ["Create an AI social media calendar", "Learn to optimize FB ads with AI", "Audit local business marketing"],
+        [ExperienceLevel.INTERMEDIATE]: ["Build automated marketing funnels", "Scale lead gen with AI personalization", "Offer AI-driven SEO services"],
+        [ExperienceLevel.PROFESSIONAL]: ["Consult on global AI marketing strategy", "Develop proprietary AI marketing models", "Manage $100k+ monthly ad spend"]
+      },
+      'AI Image & Design': {
+        [ExperienceLevel.BEGINNER]: ["Design unique logos for startups", "Sell AI-generated stock photography", "Create a 10-asset brand portfolio"],
+        [ExperienceLevel.INTERMEDIATE]: ["Build an AI design subscription", "Offer consistent character design", "Create UI/UX prototypes with AI"],
+        [ExperienceLevel.PROFESSIONAL]: ["Art direct AI-native brand campaigns", "Consult for agencies on AI creative", "Build custom enterprise LoRA models"]
+      },
+      'AI Automation': {
+        [ExperienceLevel.BEGINNER]: ["Automate my personal email workflow", "Connect 3 apps with Zapier for clients", "Build a simple lead capture bot"],
+        [ExperienceLevel.INTERMEDIATE]: ["Design complex Make.com workflows", "Sell custom CRM automations to realtors", "Automate customer support with AI"],
+        [ExperienceLevel.PROFESSIONAL]: ["Architect enterprise AI automation stacks", "Build a $10k/mo automation agency", "Consult on legacy system AI integration"]
+      },
+      'AI Voice & Audio': {
+        [ExperienceLevel.BEGINNER]: ["Start an AI-voiced faceless podcast", "Offer AI dubbing for YouTubers", "Produce AI music tracks for ads"],
+        [ExperienceLevel.INTERMEDIATE]: ["Launch an AI voiceover agency", "Build high-quality audio ads", "Voice full audiobooks with AI"],
+        [ExperienceLevel.PROFESSIONAL]: ["Develop unique brand voice clones", "Lead AI audio post-production", "Create interactive AI voice apps"]
+      },
+      'No-Code AI Apps': {
+        [ExperienceLevel.BEGINNER]: ["Build an AI image generator web app", "Create a personal knowledge base tool", "Launch a small directory on Bubble"],
+        [ExperienceLevel.INTERMEDIATE]: ["Develop a niche AI SaaS for real estate", "Build a customer portal with AI chat", "Launch a paid membership site"],
+        [ExperienceLevel.PROFESSIONAL]: ["Scale a multi-tenant AI platform", "Build internal tools for Fortune 500s", "Consult on no-code architectural scaling"]
+      },
+      'Prompt Engineering': {
+        [ExperienceLevel.BEGINNER]: ["Master basic text generation prompts", "Create a library of 50 reusable prompts", "Optimize prompts for daily tasks"],
+        [ExperienceLevel.INTERMEDIATE]: ["Build a 'Prompt-as-a-Service' business", "Consult on prompt optimization", "Engineer multi-modal prompt workflows"],
+        [ExperienceLevel.PROFESSIONAL]: ["Design system instructions for large apps", "Lead prompt security/red-teaming", "Train corporate teams on prompting"]
+      },
       'AI Business Strategy': {
         [ExperienceLevel.BEGINNER]: ["Launch an AI tool auditing service", "Train small teams on AI productivity", "Offer free AI strategy sessions"],
         [ExperienceLevel.INTERMEDIATE]: ["Consult for mid-sized tech firms", "Build an AI ROI calculator tool", "Create custom AI governance policies"],
-        [ExperienceLevel.PROFESSIONAL]: ["Lead Enterprise AI digital transformations", "Partner with VC firms for AI due diligence", "Keynote speak on AI business ethics"]
+        [ExperienceLevel.PROFESSIONAL]: ["Lead Enterprise AI transformations", "Partner with VCs for AI due diligence", "Keynote speak on AI business ethics"]
       }
     };
 
-    return (suggestionMap as any)[skill]?.[level] || (level === ExperienceLevel.BEGINNER 
+    const specificSuggestions = (suggestionMap as any)[skill]?.[level];
+    if (specificSuggestions) return specificSuggestions;
+
+    // Fallback logic for "Other / Custom" or skills not in map
+    return (level === ExperienceLevel.BEGINNER 
       ? ["Earn my first $1k using AI", "Build a professional portfolio", "Land a junior AI-related role"]
       : ["Scale my income by 2x", "Become a recognized expert", "Consult for high-paying clients"]);
   }, [prefs.skill, customSkill, prefs.experience]);

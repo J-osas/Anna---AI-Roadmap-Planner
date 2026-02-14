@@ -2,9 +2,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { UserPreferences, RoadmapResponse } from "../types";
 
-// The API key must be obtained exclusively from the environment variable process.env.API_KEY.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const SYSTEM_INSTRUCTION = `You are Anna, an AI Roadmap Planner. Your role is to create customized 7-step action plans for users who want to learn profitable AI skills without coding.
 
 Guidelines:
@@ -21,6 +18,14 @@ Guidelines:
 8. Customize each step based on the user's selected skill and context.`;
 
 export async function generateRoadmap(prefs: UserPreferences): Promise<RoadmapResponse> {
+  const isEnvAvailable = typeof process !== 'undefined' && process.env;
+  const apiKey = (isEnvAvailable && process.env.API_KEY) || "";
+  
+  if (!apiKey) {
+    throw new Error("AI API Key is missing. Please check your environment variables.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   const prompt = `Hi Anna, my name is ${prefs.name}. I want to learn ${prefs.skill}. I'm a ${prefs.experience} and my goal is: ${prefs.goal}. Please generate my 7-step roadmap.`;
 
   try {
